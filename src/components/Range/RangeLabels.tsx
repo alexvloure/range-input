@@ -14,8 +14,8 @@ export const RangeLabels: React.FC<RangeLabelsProps> = ({
   changeValue,
 }) => {
   return (
-    <div className="w-full flex justify-between">
-      <div className="flex gap-1 ml-[-14px]">
+    <div className="w-full flex justify-between relative">
+      <div className="flex gap-1 ml-[-25px] absolute top-0 left-0">
         <input
           type="number"
           className="custom-input min-w-14"
@@ -32,7 +32,7 @@ export const RangeLabels: React.FC<RangeLabelsProps> = ({
         />
         <span>&#8364;</span>
       </div>
-      <div className="flex gap-1">
+      <div className="flex gap-1 mr-[-10px] absolute top-0 right-0">
         <input
           type="number"
           className="custom-input min-w-14"

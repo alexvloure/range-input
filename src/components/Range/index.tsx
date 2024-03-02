@@ -1,7 +1,11 @@
 /* eslint-disable react-hooks/exhaustive-deps */
-'use client';
-
-import { useCallback, useLayoutEffect, useRef, useState } from 'react';
+import React, {
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useRef,
+  useState,
+} from 'react';
 import './rangeStyles.css';
 import { RangeHandle } from './RangeHandle';
 import { RangeTrack } from './RangeTrack';
@@ -13,25 +17,13 @@ export type RangeValueType = {
 };
 
 type RangeProps = Readonly<{
-  /*
-   * The minimum value of the range
-   */
   min: number;
-  /*
-   * The maximum value of the range
-   */
   max: number;
-  /**
-   * The value of the range
-   */
   value: RangeValueType;
   /**
    * The steps for the range
    */
   steps?: number[];
-  /**
-   * The function to call when the value changes
-   */
   onChange: (value: RangeValueType) => void;
   /**
    * The width of the range
@@ -54,58 +46,44 @@ export const Range: React.FC<RangeProps> = ({
   width = 240,
   showLabels = true,
 }) => {
-  const [initialized, setInitialized] = useState(false);
   const startValueRef = useRef<number>(value.start);
   const endValueRef = useRef<number>(value.end);
   const sliderRef = useRef<HTMLDivElement | null>(null);
   const startValueHandlerRef = useRef<HTMLDivElement | null>(null);
   const endValueHandlerRef = useRef<HTMLDivElement | null>(null);
   const valueRange = max - min;
+  // Save the value of the range, assuring that it is between the min and max values
+  const [clampedValue, setClampedValue] = useState<RangeValueType>({
+    start: value.start < min ? min : value.start > max ? min : value.start,
+    end: value.end > max ? max : value.end < min ? max : value.end,
+  });
+
+  // Update value
+  const changeValue = (value: RangeValueType) => {
+    onChange(value);
+    setClampedValue(value);
+  };
 
   // Get the position of the handles
   const getHandlePosition = useCallback(
     (value: number, isStart: boolean) => {
       const handleWidth = 13;
-      switch (isStart) {
-        case true:
-          if (value < min) value = min;
-          const percentageStart = ((value - min) / valueRange) * 100;
-          return (percentageStart / 100) * width - handleWidth;
-        case false:
-          if (value > max) value = max;
-          const percentageEnd = ((value - min) / valueRange) * 100;
-          return width - (percentageEnd / 100) * width - handleWidth;
-      }
+      let clampedValue = Math.min(Math.max(value, min), max);
+      const percentage = ((clampedValue - min) / valueRange) * 100;
+
+      return isStart
+        ? (percentage / 100) * width - handleWidth
+        : width - (percentage / 100) * width - handleWidth;
     },
     [min, max, width, valueRange]
   );
 
   // Get the position of the track
   const getTrackPosition = () => {
-    const start = getHandlePosition(value.start, true);
-    const end = getHandlePosition(value.end, false);
+    const start = getHandlePosition(clampedValue.start, true);
+    const end = getHandlePosition(clampedValue.end, false);
     return { left: start + 3, width: width - end - start - 6 };
   };
-
-  // Check if the value is within the bounds
-  const checkBounds = () => {
-    const newValueStart =
-      value.start < min ? min : value.start > max ? min : value.start;
-    const newValueEnd =
-      value.end > max ? max : value.end < min ? max : value.end;
-
-    if (newValueStart !== value.start || newValueEnd !== value.end) {
-      onChange({ start: newValueStart, end: newValueEnd });
-    }
-  };
-
-  // Check bounds and initialize the range
-  useLayoutEffect(() => {
-    checkBounds();
-    startValueRef.current = value.start;
-    endValueRef.current = value.end;
-    setInitialized(true);
-  }, [value]);
 
   useLayoutEffect(() => {
     if (
@@ -147,13 +125,13 @@ export const Range: React.FC<RangeProps> = ({
       const newValue = min + (percentage / 100) * valueRange;
       if (isStart && Math.round(newValue) < Math.round(endValueRef.current)) {
         startValueRef.current = newValue;
-        onChange({ start: startValueRef.current, end: endValueRef.current });
+        changeValue({ start: startValueRef.current, end: endValueRef.current });
       } else if (
         !isStart &&
         Math.round(newValue) > Math.round(startValueRef.current)
       ) {
         endValueRef.current = newValue;
-        onChange({ start: startValueRef.current, end: endValueRef.current });
+        changeValue({ start: startValueRef.current, end: endValueRef.current });
       }
     }
 
@@ -171,12 +149,14 @@ export const Range: React.FC<RangeProps> = ({
     <div
       data-testid="range"
       className="flex flex-col items-center gap-6"
-      style={{
-        width,
-        visibility: `${initialized ? 'visible' : 'hidden'}`,
-      }}>
+      style={{ width }}>
       {showLabels && (
-        <RangeLabels min={min} max={max} value={value} changeValue={onChange} />
+        <RangeLabels
+          min={min}
+          max={max}
+          value={clampedValue}
+          changeValue={changeValue}
+        />
       )}
       <div className="h-10 flex items-center" style={{ width }}>
         <div
@@ -185,13 +165,13 @@ export const Range: React.FC<RangeProps> = ({
           <RangeHandle
             id="startValueHandler"
             handleRef={startValueHandlerRef}
-            position={getHandlePosition(value.start, true)}
+            position={getHandlePosition(clampedValue.start, true)}
           />
           <RangeHandle
             id="endValueHandler"
             handleRef={endValueHandlerRef}
             isStart={false}
-            position={getHandlePosition(value.end, false)}
+            position={getHandlePosition(clampedValue.end, false)}
           />
           <RangeTrack
             left={getTrackPosition().left}
