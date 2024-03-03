@@ -1,4 +1,4 @@
-type RangeHandleProps = Readonly<{
+export type RangeHandleProps = Readonly<{
   id: string;
   handleRef: React.RefObject<HTMLDivElement>;
   /**

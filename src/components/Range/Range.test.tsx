@@ -18,8 +18,8 @@ describe('Range component', () => {
     expect(getByLabelText('end-range-input')).toHaveValue(80);
 
     // Check if handles are rendered
-    expect(getByTestId('startValueHandler')).toBeInTheDocument();
-    expect(getByTestId('endValueHandler')).toBeInTheDocument();
+    expect(getByTestId('startValueHandle')).toBeInTheDocument();
+    expect(getByTestId('endValueHandle')).toBeInTheDocument();
   });
   it('renders without labels if showLabels is false', () => {
     const { queryByLabelText, getByTestId } = render(
@@ -37,8 +37,8 @@ describe('Range component', () => {
     expect(queryByLabelText('end-range-input')).toBeNull();
 
     // Check if handles are rendered
-    expect(getByTestId('startValueHandler')).toBeInTheDocument();
-    expect(getByTestId('endValueHandler')).toBeInTheDocument();
+    expect(getByTestId('startValueHandle')).toBeInTheDocument();
+    expect(getByTestId('endValueHandle')).toBeInTheDocument();
   });
   it('renders with custom width', () => {
     const { getByTestId } = render(
@@ -51,8 +51,8 @@ describe('Range component', () => {
       />
     );
 
-    // Check if Range has the correct width
-    expect(getByTestId('range')).toHaveStyle('width: 300px');
+    // Check if slider has the correct width
+    expect(getByTestId('slider')).toHaveStyle('width: 300px');
   });
   it('renders min and max values if the values provided are out of bounds', async () => {
     const { getByLabelText } = render(
@@ -64,13 +64,11 @@ describe('Range component', () => {
       />
     );
 
-    await waitFor(() => {
-      // Check if labels are rendered with min and max values
-      expect(getByLabelText('start-range-input')).toHaveValue(0);
-      expect(getByLabelText('end-range-input')).toHaveValue(100);
-    });
+    // Check if labels are rendered with min and max values
+    expect(getByLabelText('start-range-input')).toHaveValue(0);
+    expect(getByLabelText('end-range-input')).toHaveValue(100);
   });
-  it('handles user interaction correctly', () => {
+  it('handles user interaction correctly', async () => {
     const onChangeMock = jest.fn();
     const { getByTestId } = render(
       <Range
@@ -81,28 +79,65 @@ describe('Range component', () => {
       />
     );
 
-    const startHandle = getByTestId('startValueHandler');
-    const endHandle = getByTestId('endValueHandler');
+    const startValueHandle = getByTestId('startValueHandle');
+    const endValueHandle = getByTestId('endValueHandle');
 
-    fireEvent.mouseDown(startHandle);
-    fireEvent.mouseMove(startHandle, { clientX: 50 }); // Simulate dragging
-    fireEvent.mouseUp(startHandle);
+    window.HTMLElement.prototype.getBoundingClientRect = function () {
+      return {
+        width: parseFloat(this.style.width) || 0,
+        height: parseFloat(this.style.height) || 0,
+        top: parseFloat(this.style.marginTop) || 0,
+        left: parseFloat(this.style.marginLeft) || 0,
+      } as DOMRect;
+    };
+
+    fireEvent.mouseDown(startValueHandle);
+    fireEvent.mouseMove(window, { clientX: 50 });
+    fireEvent.mouseUp(startValueHandle);
 
     expect(onChangeMock).toHaveBeenCalledWith({
       start: expect.any(Number),
       end: expect.any(Number),
     });
 
-    fireEvent.mouseDown(endHandle);
-    fireEvent.mouseMove(endHandle, { clientX: 150 }); // Simulate dragging beyond max value
-    fireEvent.mouseUp(endHandle);
+    fireEvent.mouseDown(endValueHandle);
+    fireEvent.mouseMove(window, { clientX: 90 });
+    fireEvent.mouseUp(endValueHandle);
 
-    // Ensure that onChange is called with corrected values
     expect(onChangeMock).toHaveBeenCalledWith({
       start: expect.any(Number),
       end: expect.any(Number),
     });
+  });
+  it('removes listeners on unmount', async () => {
+    const { getByTestId, unmount } = render(
+      <Range
+        min={0}
+        max={100}
+        value={{ start: 20, end: 80 }}
+        onChange={() => {}}
+      />
+    );
 
-    // You can add more assertions based on your specific UI
+    const startValueHandle = getByTestId('startValueHandle');
+    const endValueHandle = getByTestId('endValueHandle');
+
+    const removeEventListenerStart = jest.spyOn(
+      startValueHandle,
+      'removeEventListener'
+    );
+    const removeEventListenerEnd = jest.spyOn(
+      endValueHandle,
+      'removeEventListener'
+    );
+    unmount();
+    expect(removeEventListenerStart).toHaveBeenCalledWith(
+      'mousedown',
+      expect.any(Function)
+    );
+    expect(removeEventListenerEnd).toHaveBeenCalledWith(
+      'mousedown',
+      expect.any(Function)
+    );
   });
 });

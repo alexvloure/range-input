@@ -14,29 +14,54 @@ async function fetchRangeData() {
   };
 }
 
-export default function Home() {
-  const [isLoading, setIsLoading] = useState(true);
-  const [value, setValue] = useState<RangeValueType>({
-    start: 1,
-    end: 10,
-  });
+async function fetchStepsData() {
+  const response = await fetch(
+    `${process.env.NEXT_PUBLIC_API_URL}/randomSteps`
+  );
+  const data = await response.json();
+  return data;
+}
 
-  if (isLoading) {
+export default function Home() {
+  const [isLoadingMinMax, setIsLoadingMinMax] = useState(true);
+  const [isLoadingSteps, setIsLoadingSteps] = useState(true);
+  const [value, setValue] = useState<RangeValueType>({ start: 0, end: 0 });
+  const [steps, setSteps] = useState<number[]>([]);
+
+  if (isLoadingMinMax) {
     fetchRangeData().then((data) => {
       setValue(data);
-      setIsLoading(false);
+      setIsLoadingMinMax(false);
+    });
+  }
+
+  if (isLoadingSteps) {
+    fetchStepsData().then((data) => {
+      console.log(data);
+      setIsLoadingSteps(false);
     });
   }
 
   return (
-    <main className="flex min-h-screen flex-col items-center justify-center p-24">
-      {isLoading ? (
-        <p>Loading...</p>
+    <main className="flex min-h-screen flex-col items-center justify-center p-24 gap-14">
+      {isLoadingMinMax ? (
+        <p>Loading continuous range slider...</p>
       ) : (
         <Range
           min={1}
           max={100}
           value={value}
+          onChange={(value: RangeValueType) => setValue(value)}
+        />
+      )}
+      {isLoadingSteps ? (
+        <p>Loading steps range slider...</p>
+      ) : (
+        <Range
+          min={1}
+          max={100}
+          value={{ start: 1, end: 100 }}
+          steps={steps}
           onChange={(value: RangeValueType) => setValue(value)}
         />
       )}

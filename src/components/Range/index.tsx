@@ -1,11 +1,5 @@
 /* eslint-disable react-hooks/exhaustive-deps */
-import React, {
-  useCallback,
-  useEffect,
-  useLayoutEffect,
-  useRef,
-  useState,
-} from 'react';
+import React, { useCallback, useLayoutEffect, useRef, useState } from 'react';
 import './rangeStyles.css';
 import { RangeHandle } from './RangeHandle';
 import { RangeTrack } from './RangeTrack';
@@ -21,7 +15,7 @@ type RangeProps = Readonly<{
   max: number;
   value: RangeValueType;
   /**
-   * The steps for the range
+   * The steps for the range. If not provided, the range will be continuous.
    */
   steps?: number[];
   onChange: (value: RangeValueType) => void;
@@ -49,10 +43,10 @@ export const Range: React.FC<RangeProps> = ({
   const startValueRef = useRef<number>(value.start);
   const endValueRef = useRef<number>(value.end);
   const sliderRef = useRef<HTMLDivElement | null>(null);
-  const startValueHandlerRef = useRef<HTMLDivElement | null>(null);
-  const endValueHandlerRef = useRef<HTMLDivElement | null>(null);
+  const startValueHandleRef = useRef<HTMLDivElement | null>(null);
+  const endValueHandleRef = useRef<HTMLDivElement | null>(null);
   const valueRange = max - min;
-  // Save the value of the range, assuring that it is between the min and max values
+  // Set the value of the range, assuring that it is between the min and max values
   const [clampedValue, setClampedValue] = useState<RangeValueType>({
     start: value.start < min ? min : value.start > max ? min : value.start,
     end: value.end > max ? max : value.end < min ? max : value.end,
@@ -87,18 +81,18 @@ export const Range: React.FC<RangeProps> = ({
 
   useLayoutEffect(() => {
     if (
-      startValueHandlerRef.current === null ||
-      endValueHandlerRef.current === null
+      startValueHandleRef.current === null ||
+      endValueHandleRef.current === null
     )
       return;
-    const startValueHandler = startValueHandlerRef.current;
-    const endValueHandler = endValueHandlerRef.current;
+    const startValueHandle = startValueHandleRef.current;
+    const endValueHandle = endValueHandleRef.current;
 
-    startValueHandler.addEventListener('mousedown', () =>
-      startDrag(startValueHandler)
+    startValueHandle.addEventListener('mousedown', () =>
+      startDrag(startValueHandle)
     );
-    endValueHandler.addEventListener('mousedown', () =>
-      startDrag(endValueHandler)
+    endValueHandle.addEventListener('mousedown', () =>
+      startDrag(endValueHandle)
     );
 
     function startDrag(handle: HTMLElement) {
@@ -116,7 +110,7 @@ export const Range: React.FC<RangeProps> = ({
     // Calculate the new value of the range and the position of the handle
     function drag(e: MouseEvent, handler: HTMLElement) {
       const slider = sliderRef.current!.getBoundingClientRect();
-      const isStart = handler.id === 'startValueHandler';
+      const isStart = handler.id === 'startValueHandle';
       const handleAdjustment = isStart ? 4 : -4;
       let newX = e.clientX - slider.left + handleAdjustment;
       newX = Math.max(0, Math.min(newX, slider.width));
@@ -136,20 +130,17 @@ export const Range: React.FC<RangeProps> = ({
     }
 
     return () => {
-      startValueHandler.removeEventListener('mousedown', () =>
-        startDrag(startValueHandler)
+      startValueHandle.removeEventListener('mousedown', () =>
+        startDrag(startValueHandle)
       );
-      endValueHandler.removeEventListener('mousedown', () =>
-        startDrag(endValueHandler)
+      endValueHandle.removeEventListener('mousedown', () =>
+        startDrag(endValueHandle)
       );
     };
   }, []);
 
   return (
-    <div
-      data-testid="range"
-      className="flex flex-col items-center gap-6"
-      style={{ width }}>
+    <div data-testid="range" className="flex flex-col items-center gap-6">
       {showLabels && (
         <RangeLabels
           min={min}
@@ -158,18 +149,20 @@ export const Range: React.FC<RangeProps> = ({
           changeValue={changeValue}
         />
       )}
-      <div className="h-10 flex items-center" style={{ width }}>
+      <div className="h-10 w-full flex items-center">
         <div
+          data-testid="slider"
           ref={sliderRef}
-          className="slider relative w-full h-[2px] bg-gray-500">
+          style={{ width }}
+          className="slider relative h-[2px] bg-gray-500">
           <RangeHandle
-            id="startValueHandler"
-            handleRef={startValueHandlerRef}
+            id="startValueHandle"
+            handleRef={startValueHandleRef}
             position={getHandlePosition(clampedValue.start, true)}
           />
           <RangeHandle
-            id="endValueHandler"
-            handleRef={endValueHandlerRef}
+            id="endValueHandle"
+            handleRef={endValueHandleRef}
             isStart={false}
             position={getHandlePosition(clampedValue.end, false)}
           />
