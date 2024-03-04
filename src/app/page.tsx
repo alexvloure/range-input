@@ -3,9 +3,9 @@
 import { Range, RangeValueType } from '@/components/Range';
 import { useState } from 'react';
 
-async function fetchRangeData() {
+async function fetchData() {
   const response = await fetch(
-    `${process.env.NEXT_PUBLIC_API_URL}/randomMinMax`
+    `${process.env.NEXT_PUBLIC_API_URL}/rangeMinMax`
   );
   const data = await response.json();
   return {
@@ -15,29 +15,29 @@ async function fetchRangeData() {
 }
 
 async function fetchStepsData() {
-  const response = await fetch(
-    `${process.env.NEXT_PUBLIC_API_URL}/randomSteps`
-  );
+  const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/rangeSteps`);
   const data = await response.json();
-  return data;
+  return data.steps;
 }
 
 export default function Home() {
   const [isLoadingMinMax, setIsLoadingMinMax] = useState(true);
   const [isLoadingSteps, setIsLoadingSteps] = useState(true);
   const [value, setValue] = useState<RangeValueType>({ start: 0, end: 0 });
+  const [stepValue, setStepValue] = useState<RangeValueType>({
+    start: 0,
+    end: 0,
+  });
   const [steps, setSteps] = useState<number[]>([]);
 
-  if (isLoadingMinMax) {
-    fetchRangeData().then((data) => {
+  if (isLoadingMinMax && isLoadingSteps) {
+    fetchData().then((data) => {
       setValue(data);
       setIsLoadingMinMax(false);
     });
-  }
-
-  if (isLoadingSteps) {
     fetchStepsData().then((data) => {
-      console.log(data);
+      setStepValue({ start: data[0], end: data[5] });
+      setSteps(data);
       setIsLoadingSteps(false);
     });
   }
@@ -45,24 +45,20 @@ export default function Home() {
   return (
     <main className="flex min-h-screen flex-col items-center justify-center p-24 gap-14">
       {isLoadingMinMax ? (
-        <p>Loading continuous range slider...</p>
+        <p>Retriving min and max values...</p>
       ) : (
         <Range
-          min={1}
-          max={100}
           value={value}
           onChange={(value: RangeValueType) => setValue(value)}
         />
       )}
       {isLoadingSteps ? (
-        <p>Loading steps range slider...</p>
+        <p>Retrieving steps...</p>
       ) : (
         <Range
-          min={1}
-          max={100}
-          value={{ start: 1, end: 100 }}
+          value={stepValue}
           steps={steps}
-          onChange={(value: RangeValueType) => setValue(value)}
+          onChange={(value: RangeValueType) => setStepValue(value)}
         />
       )}
     </main>

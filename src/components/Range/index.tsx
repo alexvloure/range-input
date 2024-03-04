@@ -1,5 +1,5 @@
 /* eslint-disable react-hooks/exhaustive-deps */
-import React, { useCallback, useLayoutEffect, useRef, useState } from 'react';
+import React, { useLayoutEffect, useRef, useState } from 'react';
 import './rangeStyles.css';
 import { RangeHandle } from './RangeHandle';
 import { RangeTrack } from './RangeTrack';
@@ -11,18 +11,12 @@ export type RangeValueType = {
 };
 
 type RangeProps = Readonly<{
-  min: number;
-  max: number;
   value: RangeValueType;
   /**
    * The steps for the range. If not provided, the range will be continuous.
    */
   steps?: number[];
   onChange: (value: RangeValueType) => void;
-  /**
-   * The width of the range
-   * @default 240px
-   */
   width?: number;
   /**
    * Show the labels for the range
@@ -32,8 +26,6 @@ type RangeProps = Readonly<{
 }>;
 
 export const Range: React.FC<RangeProps> = ({
-  min,
-  max,
   value,
   steps,
   onChange,
@@ -42,40 +34,55 @@ export const Range: React.FC<RangeProps> = ({
 }) => {
   const startValueRef = useRef<number>(value.start);
   const endValueRef = useRef<number>(value.end);
+  const minVal = useRef<number>(value.start);
+  const maxVal = useRef<number>(value.end);
+  const valueRange = maxVal.current - minVal.current;
   const sliderRef = useRef<HTMLDivElement | null>(null);
   const startValueHandleRef = useRef<HTMLDivElement | null>(null);
   const endValueHandleRef = useRef<HTMLDivElement | null>(null);
-  const valueRange = max - min;
-  // Set the value of the range, assuring that it is between the min and max values
-  const [clampedValue, setClampedValue] = useState<RangeValueType>({
-    start: value.start < min ? min : value.start > max ? min : value.start,
-    end: value.end > max ? max : value.end < min ? max : value.end,
+  const stepMode = steps && steps.length > 0;
+  // Set the value, assuring that it is between the min and max values
+  const [rangeValue, setRangeValue] = useState<RangeValueType>({
+    start: value.start,
+    end: value.end,
   });
 
-  // Update value
+  /**
+   * Update both the range value and the value reference
+   * @param value The new value of the range
+   */
   const changeValue = (value: RangeValueType) => {
     onChange(value);
-    setClampedValue(value);
+    setRangeValue(value);
   };
 
-  // Get the position of the handles
-  const getHandlePosition = useCallback(
-    (value: number, isStart: boolean) => {
-      const handleWidth = 13;
-      let clampedValue = Math.min(Math.max(value, min), max);
-      const percentage = ((clampedValue - min) / valueRange) * 100;
+  /**
+   * Get the position of the handle.
+   * If the range is in step mode, the value will be the closest step.
+   * @param value The value of the handle
+   * @param isStart If the handle is the start handle
+   * @returns
+   */
+  const getHandlePosition = (value: number, isStart: boolean) => {
+    const handleWidth = 13;
+    if (stepMode) {
+      const step = steps.reduce((prev, curr) =>
+        Math.abs(curr - value) < Math.abs(prev - value) ? curr : prev
+      );
+      value = step;
+    }
+    const percentage = ((value - minVal.current) / valueRange) * 100;
+    return isStart
+      ? (percentage / 100) * width - handleWidth
+      : width - (percentage / 100) * width - handleWidth;
+  };
 
-      return isStart
-        ? (percentage / 100) * width - handleWidth
-        : width - (percentage / 100) * width - handleWidth;
-    },
-    [min, max, width, valueRange]
-  );
-
-  // Get the position of the track
+  /**
+   * Get the position and width of the track
+   */
   const getTrackPosition = () => {
-    const start = getHandlePosition(clampedValue.start, true);
-    const end = getHandlePosition(clampedValue.end, false);
+    const start = getHandlePosition(rangeValue.start, true);
+    const end = getHandlePosition(rangeValue.end, false);
     return { left: start + 3, width: width - end - start - 6 };
   };
 
@@ -107,7 +114,12 @@ export const Range: React.FC<RangeProps> = ({
       window.addEventListener('mouseup', endDragHandler);
     }
 
-    // Calculate the new value of the range and the position of the handle
+    /**
+     * Calculate the new value of the range.
+     * If the range is in step mode, the value will be the closest step.
+     * @param e
+     * @param handler
+     */
     function drag(e: MouseEvent, handler: HTMLElement) {
       const slider = sliderRef.current!.getBoundingClientRect();
       const isStart = handler.id === 'startValueHandle';
@@ -116,7 +128,16 @@ export const Range: React.FC<RangeProps> = ({
       newX = Math.max(0, Math.min(newX, slider.width));
 
       const percentage = (newX / slider.width) * 100;
-      const newValue = min + (percentage / 100) * valueRange;
+      let newValue = Math.round(
+        minVal.current + (percentage / 100) * valueRange
+      );
+
+      if (stepMode) {
+        newValue = steps.reduce((prev, curr) =>
+          Math.abs(curr - newValue) < Math.abs(prev - newValue) ? curr : prev
+        );
+      }
+
       if (isStart && Math.round(newValue) < Math.round(endValueRef.current)) {
         startValueRef.current = newValue;
         changeValue({ start: startValueRef.current, end: endValueRef.current });
@@ -143,9 +164,10 @@ export const Range: React.FC<RangeProps> = ({
     <div data-testid="range" className="flex flex-col items-center gap-6">
       {showLabels && (
         <RangeLabels
-          min={min}
-          max={max}
-          value={clampedValue}
+          min={minVal.current}
+          max={maxVal.current}
+          value={rangeValue}
+          stepMode={stepMode}
           changeValue={changeValue}
         />
       )}
@@ -158,13 +180,13 @@ export const Range: React.FC<RangeProps> = ({
           <RangeHandle
             id="startValueHandle"
             handleRef={startValueHandleRef}
-            position={getHandlePosition(clampedValue.start, true)}
+            position={getHandlePosition(rangeValue.start, true)}
           />
           <RangeHandle
             id="endValueHandle"
             handleRef={endValueHandleRef}
             isStart={false}
-            position={getHandlePosition(clampedValue.end, false)}
+            position={getHandlePosition(rangeValue.end, false)}
           />
           <RangeTrack
             left={getTrackPosition().left}
