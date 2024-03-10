@@ -16,11 +16,6 @@ type RangeProps = Readonly<{
   steps?: number[];
   onChange: (value: RangeValueType) => void;
   width?: number;
-  /**
-   * Show the labels for the range
-   * @default true
-   */
-  showLabels?: boolean;
 }>;
 
 export const Range: React.FC<RangeProps> = ({
@@ -28,7 +23,6 @@ export const Range: React.FC<RangeProps> = ({
   steps,
   onChange,
   width = 240,
-  showLabels = true,
 }) => {
   const startValueRef = useRef<number>(value.start);
   const endValueRef = useRef<number>(value.end);
@@ -177,38 +171,36 @@ export const Range: React.FC<RangeProps> = ({
 
   return (
     <div data-testid="range" className="flex flex-col items-center gap-6">
-      {showLabels && (
-        <RangeLabels
-          min={minVal.current}
-          max={maxVal.current}
-          value={rangeValue}
-          stepMode={stepMode}
-          changeValue={changeValue}
-        />
-      )}
-      <div className="h-10 w-full flex items-center">
-        <div
-          data-testid="slider"
-          ref={sliderRef}
-          style={{ width }}
-          className="slider relative h-[2px] bg-gray-500">
-          <RangeHandle
-            id="startValueHandle"
-            handleRef={startValueHandleRef}
-            position={getHandlePosition(rangeValue.start, true)}
-          />
-          <RangeHandle
-            id="endValueHandle"
-            handleRef={endValueHandleRef}
-            isStart={false}
-            position={getHandlePosition(rangeValue.end, false)}
-          />
-          <RangeTrack
-            left={getTrackPosition().left}
-            width={getTrackPosition().width}
-          />
+      <RangeLabels
+        min={minVal.current}
+        max={maxVal.current}
+        value={rangeValue}
+        stepMode={stepMode}
+        changeValue={changeValue}>
+        <div className="h-10 w-full flex items-center">
+          <div
+            data-testid="slider"
+            ref={sliderRef}
+            style={{ width }}
+            className="slider relative h-[2px] bg-gray-500">
+            <RangeHandle
+              id="startValueHandle"
+              handleRef={startValueHandleRef}
+              position={getHandlePosition(rangeValue.start, true)}
+            />
+            <RangeHandle
+              id="endValueHandle"
+              handleRef={endValueHandleRef}
+              isStart={false}
+              position={getHandlePosition(rangeValue.end, false)}
+            />
+            <RangeTrack
+              left={getTrackPosition().left}
+              width={getTrackPosition().width}
+            />
+          </div>
         </div>
-      </div>
+      </RangeLabels>
     </div>
   );
 };

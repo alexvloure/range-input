@@ -1,5 +1,5 @@
 .custom-input {
-  width: 65px;
+  width: 45px;
   background-color: transparent;
   outline: none;
   text-align: right;
@@ -13,6 +13,10 @@ input::-webkit-inner-spin-button {
 
 input[type=number] {
     -moz-appearance:textfield;
+}
+
+.input-wrapper {
+  user-select: none;
 }
 
 @media (any-hover: hover) {

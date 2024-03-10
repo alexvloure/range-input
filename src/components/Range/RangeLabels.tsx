@@ -6,6 +6,7 @@ type RangeLabelsProps = Readonly<{
   value: RangeValueType;
   stepMode: boolean | undefined;
   changeValue: (value: RangeValueType) => void;
+  children: React.ReactNode;
 }>;
 
 export const RangeLabels: React.FC<RangeLabelsProps> = ({
@@ -14,6 +15,7 @@ export const RangeLabels: React.FC<RangeLabelsProps> = ({
   value,
   stepMode = false,
   changeValue,
+  children,
 }) => {
   const handleStartInputChange = (inputValue: number) => {
     let newValue =
@@ -36,12 +38,12 @@ export const RangeLabels: React.FC<RangeLabelsProps> = ({
   };
 
   return (
-    <div className="w-full flex justify-between relative">
-      <div className="flex gap-1 ml-[-25px] absolute top-0 left-0">
+    <div className="w-full flex">
+      <div className="input-wrapper flex gap-1 mr-4 items-center">
         <input
           type="number"
           disabled={stepMode}
-          className="custom-input min-w-14"
+          className="custom-input"
           min={min}
           max={value.end - 1}
           value={value.start}
@@ -52,11 +54,12 @@ export const RangeLabels: React.FC<RangeLabelsProps> = ({
         />
         <span>&#8364;</span>
       </div>
-      <div className="flex gap-1 mr-[-10px] absolute top-0 right-0">
+      {children}
+      <div className="input-wrapper flex gap-1 ml-3 items-center">
         <input
           type="number"
           disabled={stepMode}
-          className="custom-input min-w-14"
+          className="custom-input"
           min={value.start + 1}
           max={max}
           value={value.end}

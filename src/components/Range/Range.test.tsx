@@ -27,23 +27,6 @@ describe('Range component', () => {
     expect(getByTestId('startValueHandle')).toBeInTheDocument();
     expect(getByTestId('endValueHandle')).toBeInTheDocument();
   });
-  it('renders without labels if showLabels is false', () => {
-    const { queryByLabelText, getByTestId } = render(
-      <Range
-        value={{ start: 20, end: 80 }}
-        onChange={() => {}}
-        showLabels={false}
-      />
-    );
-
-    // Check if labels are not rendered
-    expect(queryByLabelText('start-range-input')).toBeNull();
-    expect(queryByLabelText('end-range-input')).toBeNull();
-
-    // Check if handles are rendered
-    expect(getByTestId('startValueHandle')).toBeInTheDocument();
-    expect(getByTestId('endValueHandle')).toBeInTheDocument();
-  });
   it('renders with custom width', () => {
     const { getByTestId } = render(
       <Range value={{ start: 20, end: 80 }} onChange={() => {}} width={300} />
