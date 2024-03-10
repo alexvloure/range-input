@@ -1,12 +1,13 @@
 import React from 'react';
 import { render, fireEvent } from '@testing-library/react';
 import { RangeLabels } from './RangeLabels';
-import { RangeValueType } from '.';
+import { RangeValueType } from '@/app/models/rangeModels';
 
 describe('RangeLabels component', () => {
   const defaultProps = {
     min: 0,
     max: 100,
+    stepMode: false,
     value: { start: 20, end: 80 } as RangeValueType,
     changeValue: jest.fn(),
   };

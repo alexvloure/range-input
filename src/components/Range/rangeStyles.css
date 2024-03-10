@@ -14,3 +14,9 @@ input::-webkit-inner-spin-button {
 input[type=number] {
     -moz-appearance:textfield;
 }
+
+@media (any-hover: hover) {
+  #startValueHandle:hover {
+    transform: scale(1.25)
+  }
+}

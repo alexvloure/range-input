@@ -4,11 +4,7 @@ import './rangeStyles.css';
 import { RangeHandle } from './RangeHandle';
 import { RangeTrack } from './RangeTrack';
 import { RangeLabels } from './RangeLabels';
-
-export type RangeValueType = {
-  start: number;
-  end: number;
-};
+import { RangeValueType } from '@/app/models/rangeModels';
 
 type RangeProps = Readonly<{
   value: RangeValueType;
@@ -98,20 +94,31 @@ export const Range: React.FC<RangeProps> = ({
     startValueHandle.addEventListener('mousedown', () =>
       startDrag(startValueHandle)
     );
+    startValueHandle.addEventListener('touchstart', () =>
+      startDrag(startValueHandle)
+    );
     endValueHandle.addEventListener('mousedown', () =>
+      startDrag(endValueHandle)
+    );
+    endValueHandle.addEventListener('touchstart', () =>
       startDrag(endValueHandle)
     );
 
     function startDrag(handle: HTMLElement) {
-      const dragHandler = (e: MouseEvent) => drag(e, handle);
+      const mouseDragHandler = (e: MouseEvent) => drag(e, handle);
+      const touchDragHandler = (ev: TouchEvent) => drag(ev, handle);
 
       const endDragHandler = () => {
-        window.removeEventListener('mousemove', dragHandler);
+        window.removeEventListener('mousemove', mouseDragHandler);
+        window.removeEventListener('touchmove', touchDragHandler);
         window.removeEventListener('mouseup', endDragHandler);
+        window.removeEventListener('touchend', endDragHandler);
       };
 
-      window.addEventListener('mousemove', dragHandler);
+      window.addEventListener('mousemove', mouseDragHandler);
+      window.addEventListener('touchmove', touchDragHandler);
       window.addEventListener('mouseup', endDragHandler);
+      window.addEventListener('touchend', endDragHandler);
     }
 
     /**
@@ -120,11 +127,17 @@ export const Range: React.FC<RangeProps> = ({
      * @param e
      * @param handler
      */
-    function drag(e: MouseEvent, handler: HTMLElement) {
+    function drag(e: MouseEvent | TouchEvent, handler: HTMLElement) {
       const slider = sliderRef.current!.getBoundingClientRect();
       const isStart = handler.id === 'startValueHandle';
       const handleAdjustment = isStart ? 4 : -4;
-      let newX = e.clientX - slider.left + handleAdjustment;
+
+      let newX;
+      if (e instanceof MouseEvent) {
+        newX = e.clientX - slider.left + handleAdjustment;
+      } else {
+        newX = e.touches[0].clientX - slider.left + handleAdjustment;
+      }
       newX = Math.max(0, Math.min(newX, slider.width));
 
       const percentage = (newX / slider.width) * 100;

@@ -1,10 +1,10 @@
 import React from 'react';
 import { render } from '@testing-library/react';
-import { RangeTrack, RangeTrackProps } from './RangeTrack';
+import { RangeTrack } from './RangeTrack';
 
 describe('RangeTrack component', () => {
   it('renders with correct left and width', () => {
-    const props: RangeTrackProps = {
+    const props = {
       left: 50,
       width: 300,
     };

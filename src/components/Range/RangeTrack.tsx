@@ -1,4 +1,4 @@
-export type RangeTrackProps = Readonly<{
+type RangeTrackProps = Readonly<{
   /**
    * The left position of the track
    */
@@ -13,7 +13,7 @@ export const RangeTrack: React.FC<RangeTrackProps> = ({ left, width }) => {
   return (
     <div
       data-testid="range-track"
-      className="absolute h-full bg-white"
+      className="absolute h-full bg-[rgb(var(--foreground-rgb))]"
       style={{
         left,
         width,

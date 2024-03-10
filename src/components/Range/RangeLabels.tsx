@@ -1,4 +1,4 @@
-import { RangeValueType } from '.';
+import { RangeValueType } from '@/app/models/rangeModels';
 
 type RangeLabelsProps = Readonly<{
   min: number;
@@ -12,7 +12,7 @@ export const RangeLabels: React.FC<RangeLabelsProps> = ({
   min,
   max,
   value,
-  stepMode,
+  stepMode = false,
   changeValue,
 }) => {
   return (

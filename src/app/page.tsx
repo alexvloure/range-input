@@ -1,9 +1,10 @@
 'use client';
 
-import { Range, RangeValueType } from '@/components/Range';
 import { useMinMax } from '@/hooks/useMinMax';
 import { useSteps } from '@/hooks/useSteps';
 import { useEffect, useState } from 'react';
+import { RangeValueType } from './models/rangeModels';
+import { Range } from '@/components/Range';
 
 export default function Home() {
   const { data: minMax, isLoading: isLoadingMinMax } = useMinMax();
