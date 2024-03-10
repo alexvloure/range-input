@@ -1,3 +1,5 @@
+'use client';
+
 /* eslint-disable react-hooks/exhaustive-deps */
 import React, { useLayoutEffect, useRef, useState } from 'react';
 import './rangeStyles.css';
