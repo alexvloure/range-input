@@ -24,6 +24,7 @@ export const Range: React.FC<RangeProps> = ({
   onChange,
   width = 240,
 }) => {
+  const nodeRef = useRef<HTMLDivElement | null>(null);
   const startValueRef = useRef<number>(value.start);
   const endValueRef = useRef<number>(value.end);
   const minVal = useRef<number>(value.start);
@@ -101,20 +102,21 @@ export const Range: React.FC<RangeProps> = ({
     );
 
     function startDrag(handle: HTMLElement) {
+      const document = nodeRef.current?.ownerDocument || window.document;
       const mouseDragHandler = (e: MouseEvent) => drag(e, handle);
       const touchDragHandler = (ev: TouchEvent) => drag(ev, handle);
 
       const endDragHandler = () => {
-        window.removeEventListener('mousemove', mouseDragHandler);
-        window.removeEventListener('touchmove', touchDragHandler);
-        window.removeEventListener('mouseup', endDragHandler);
-        window.removeEventListener('touchend', endDragHandler);
+        document.removeEventListener('mousemove', mouseDragHandler);
+        document.removeEventListener('touchmove', touchDragHandler);
+        document.removeEventListener('mouseup', endDragHandler);
+        document.removeEventListener('touchend', endDragHandler);
       };
 
-      window.addEventListener('mousemove', mouseDragHandler);
-      window.addEventListener('touchmove', touchDragHandler);
-      window.addEventListener('mouseup', endDragHandler);
-      window.addEventListener('touchend', endDragHandler);
+      document.addEventListener('mousemove', mouseDragHandler);
+      document.addEventListener('touchmove', touchDragHandler);
+      document.addEventListener('mouseup', endDragHandler);
+      document.addEventListener('touchend', endDragHandler);
     }
 
     /**
@@ -170,7 +172,10 @@ export const Range: React.FC<RangeProps> = ({
   }, []);
 
   return (
-    <div data-testid="range" className="flex flex-col items-center gap-6">
+    <div
+      ref={nodeRef}
+      data-testid="range"
+      className="flex flex-col items-center gap-6">
       <RangeLabels
         min={minVal.current}
         max={maxVal.current}
