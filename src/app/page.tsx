@@ -4,7 +4,7 @@ import { useMinMax } from '@/hooks/useMinMax';
 import { useSteps } from '@/hooks/useSteps';
 import { useEffect, useState } from 'react';
 import { RangeValueType } from './models/rangeModels';
-import { Range } from '@/components/Range';
+import RangeShowcase from '@/components/RangeShowcase';
 
 export default function Home() {
   const { data: minMax, isLoading: isLoadingMinMax } = useMinMax();
@@ -24,25 +24,21 @@ export default function Home() {
     }
   }, [steps]);
 
+  if (isLoadingMinMax || isLoadingSteps) {
+    return <p>Loading...</p>;
+  }
+
+  if (!value || !stepValue || !steps) {
+    return <p>Error: unable to retrieve data. Try again later.</p>;
+  }
+
   return (
-    <main className="flex min-h-screen flex-col items-center justify-center p-24 gap-14">
-      {isLoadingMinMax || !value ? (
-        <p>Retriving min and max values...</p>
-      ) : (
-        <Range
-          value={value}
-          onChange={(value: RangeValueType) => setValue(value)}
-        />
-      )}
-      {isLoadingSteps || !stepValue || !steps ? (
-        <p>Retrieving steps...</p>
-      ) : (
-        <Range
-          value={stepValue}
-          steps={steps}
-          onChange={(value: RangeValueType) => setStepValue(value)}
-        />
-      )}
-    </main>
+    <RangeShowcase
+      value={value}
+      setValue={setValue}
+      stepValue={stepValue}
+      setStepValue={setStepValue}
+      steps={steps}
+    />
   );
 }

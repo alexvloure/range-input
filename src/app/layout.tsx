@@ -21,7 +21,9 @@ export default function RootLayout({
         style={{
           overflowX: 'hidden',
         }}>
-        {children}
+        <main className="flex min-h-screen flex-col items-center justify-center p-24 gap-14">
+          {children}
+        </main>
       </body>
     </html>
   );
