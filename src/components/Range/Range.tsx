@@ -3,10 +3,13 @@
 /* eslint-disable react-hooks/exhaustive-deps */
 import React, { useLayoutEffect, useRef, useState } from 'react';
 import './rangeStyles.css';
-import { RangeHandle } from './RangeHandle';
-import { RangeTrack } from './RangeTrack';
-import { RangeLabels } from './RangeLabels';
+import { RangeHandle } from './RangeComponents/RangeHandle';
+import { RangeTrack } from './RangeComponents/RangeTrack';
+import { RangeLabels } from './RangeComponents/RangeLabels';
 import { RangeValueType } from '@/app/models/rangeModels';
+import { useGetPosition } from './hooks/useGetPosition';
+import { useDrag } from './hooks/useDrag';
+import { isTouchDevice } from './utils/isTouch';
 
 type RangeProps = Readonly<{
   value: RangeValueType;
@@ -33,9 +36,8 @@ export const Range: React.FC<RangeProps> = ({
   const sliderRef = useRef<HTMLDivElement | null>(null);
   const startValueHandleRef = useRef<HTMLDivElement | null>(null);
   const endValueHandleRef = useRef<HTMLDivElement | null>(null);
-  const stepMode = steps && steps.length > 0;
   // Set the value, assuring that it is between the min and max values
-  const [rangeValue, setRangeValue] = useState<RangeValueType>({
+  const [values, setValues] = useState<RangeValueType>({
     start: value.start,
     end: value.end,
   });
@@ -46,38 +48,26 @@ export const Range: React.FC<RangeProps> = ({
    */
   const changeValue = (value: RangeValueType) => {
     onChange(value);
-    setRangeValue(value);
+    setValues(value);
   };
 
-  /**
-   * Get the position of the handle.
-   * If the range is in step mode, the value will be the closest step.
-   * @param value The value of the handle
-   * @param isStart If the handle is the start handle
-   * @returns
-   */
-  const getHandlePosition = (value: number, isStart: boolean) => {
-    const handleWidth = 13;
-    if (stepMode) {
-      const step = steps.reduce((prev, curr) =>
-        Math.abs(curr - value) < Math.abs(prev - value) ? curr : prev
-      );
-      value = step;
-    }
-    const percentage = ((value - minVal.current) / valueRange) * 100;
-    return isStart
-      ? (percentage / 100) * width - handleWidth
-      : width - (percentage / 100) * width - handleWidth;
-  };
+  const { getHandlePosition, getTrackPosition } = useGetPosition({
+    minVal,
+    valueRange,
+    values,
+    width,
+    steps,
+  });
 
-  /**
-   * Get the position and width of the track
-   */
-  const getTrackPosition = () => {
-    const start = getHandlePosition(rangeValue.start, true);
-    const end = getHandlePosition(rangeValue.end, false);
-    return { left: start + 3, width: width - end - start - 6 };
-  };
+  const { startDrag } = useDrag({
+    sliderRef,
+    minVal,
+    valueRange,
+    steps,
+    startValueRef,
+    endValueRef,
+    changeValue,
+  });
 
   useLayoutEffect(() => {
     if (
@@ -88,85 +78,23 @@ export const Range: React.FC<RangeProps> = ({
     const startValueHandle = startValueHandleRef.current;
     const endValueHandle = endValueHandleRef.current;
 
-    startValueHandle.addEventListener('mousedown', () =>
-      startDrag(startValueHandle)
+    startValueHandle.addEventListener(
+      isTouchDevice() ? 'touchstart' : 'mousedown',
+      () => startDrag(nodeRef, startValueHandle)
     );
-    startValueHandle.addEventListener('touchstart', () =>
-      startDrag(startValueHandle)
+    endValueHandle.addEventListener(
+      isTouchDevice() ? 'touchstart' : 'mousedown',
+      () => startDrag(nodeRef, endValueHandle)
     );
-    endValueHandle.addEventListener('mousedown', () =>
-      startDrag(endValueHandle)
-    );
-    endValueHandle.addEventListener('touchstart', () =>
-      startDrag(endValueHandle)
-    );
-
-    function startDrag(handle: HTMLElement) {
-      const document = nodeRef.current?.ownerDocument || window.document;
-      const mouseDragHandler = (e: MouseEvent) => drag(e, handle);
-      const touchDragHandler = (ev: TouchEvent) => drag(ev, handle);
-
-      const endDragHandler = () => {
-        document.removeEventListener('mousemove', mouseDragHandler);
-        document.removeEventListener('touchmove', touchDragHandler);
-        document.removeEventListener('mouseup', endDragHandler);
-        document.removeEventListener('touchend', endDragHandler);
-      };
-
-      document.addEventListener('mousemove', mouseDragHandler);
-      document.addEventListener('touchmove', touchDragHandler);
-      document.addEventListener('mouseup', endDragHandler);
-      document.addEventListener('touchend', endDragHandler);
-    }
-
-    /**
-     * Calculate the new value of the range.
-     * If the range is in step mode, the value will be the closest step.
-     * @param e
-     * @param handler
-     */
-    function drag(e: MouseEvent | TouchEvent, handler: HTMLElement) {
-      const slider = sliderRef.current!.getBoundingClientRect();
-      const isStart = handler.id === 'startValueHandle';
-      const handleAdjustment = isStart ? 4 : -4;
-
-      let newX;
-      if (e instanceof MouseEvent) {
-        newX = e.clientX - slider.left + handleAdjustment;
-      } else {
-        newX = e.touches[0].clientX - slider.left + handleAdjustment;
-      }
-      newX = Math.max(0, Math.min(newX, slider.width));
-
-      const percentage = (newX / slider.width) * 100;
-      let newValue = Math.round(
-        minVal.current + (percentage / 100) * valueRange
-      );
-
-      if (stepMode) {
-        newValue = steps.reduce((prev, curr) =>
-          Math.abs(curr - newValue) < Math.abs(prev - newValue) ? curr : prev
-        );
-      }
-
-      if (isStart && Math.round(newValue) < Math.round(endValueRef.current)) {
-        startValueRef.current = newValue;
-        changeValue({ start: startValueRef.current, end: endValueRef.current });
-      } else if (
-        !isStart &&
-        Math.round(newValue) > Math.round(startValueRef.current)
-      ) {
-        endValueRef.current = newValue;
-        changeValue({ start: startValueRef.current, end: endValueRef.current });
-      }
-    }
 
     return () => {
-      startValueHandle.removeEventListener('mousedown', () =>
-        startDrag(startValueHandle)
+      startValueHandle.removeEventListener(
+        isTouchDevice() ? 'touchstart' : 'mousedown',
+        () => startDrag(nodeRef, startValueHandle)
       );
-      endValueHandle.removeEventListener('mousedown', () =>
-        startDrag(endValueHandle)
+      endValueHandle.removeEventListener(
+        isTouchDevice() ? 'touchstart' : 'mousedown',
+        () => startDrag(nodeRef, endValueHandle)
       );
     };
   }, []);
@@ -179,8 +107,8 @@ export const Range: React.FC<RangeProps> = ({
       <RangeLabels
         min={minVal.current}
         max={maxVal.current}
-        value={rangeValue}
-        stepMode={stepMode}
+        values={values}
+        stepMode={steps && steps.length > 0}
         changeValue={changeValue}>
         <div className="h-10 w-full flex items-center">
           <div
@@ -191,13 +119,13 @@ export const Range: React.FC<RangeProps> = ({
             <RangeHandle
               id="startValueHandle"
               handleRef={startValueHandleRef}
-              position={getHandlePosition(rangeValue.start, true)}
+              position={getHandlePosition(values.start, true)}
             />
             <RangeHandle
               id="endValueHandle"
               handleRef={endValueHandleRef}
               isStart={false}
-              position={getHandlePosition(rangeValue.end, false)}
+              position={getHandlePosition(values.end, false)}
             />
             <RangeTrack
               left={getTrackPosition().left}

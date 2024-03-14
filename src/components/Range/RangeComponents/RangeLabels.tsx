@@ -3,7 +3,7 @@ import { RangeValueType } from '@/app/models/rangeModels';
 type RangeLabelsProps = Readonly<{
   min: number;
   max: number;
-  value: RangeValueType;
+  values: RangeValueType;
   stepMode: boolean | undefined;
   changeValue: (value: RangeValueType) => void;
   children: React.ReactNode;
@@ -12,7 +12,7 @@ type RangeLabelsProps = Readonly<{
 export const RangeLabels: React.FC<RangeLabelsProps> = ({
   min,
   max,
-  value,
+  values,
   stepMode = false,
   changeValue,
   children,
@@ -21,20 +21,20 @@ export const RangeLabels: React.FC<RangeLabelsProps> = ({
     let newValue =
       inputValue < min
         ? min
-        : inputValue > value.end
-        ? value.end - 1
+        : inputValue > values.end
+        ? values.end - 1
         : inputValue;
-    changeValue({ ...value, start: newValue });
+    changeValue({ ...values, start: newValue });
   };
 
   const handleEndInputChange = (inputValue: number) => {
     let newValue =
-      inputValue < value.start
-        ? value.start + 1
+      inputValue < values.start
+        ? values.start + 1
         : inputValue > max
         ? max
         : inputValue;
-    changeValue({ ...value, end: newValue });
+    changeValue({ ...values, end: newValue });
   };
 
   return (
@@ -45,8 +45,8 @@ export const RangeLabels: React.FC<RangeLabelsProps> = ({
           disabled={stepMode}
           className="custom-input"
           min={min}
-          max={value.end - 1}
-          value={value.start}
+          max={values.end - 1}
+          value={values.start}
           onChange={(e) =>
             handleStartInputChange(e.currentTarget.valueAsNumber)
           }
@@ -60,9 +60,9 @@ export const RangeLabels: React.FC<RangeLabelsProps> = ({
           type="number"
           disabled={stepMode}
           className="custom-input"
-          min={value.start + 1}
+          min={values.start + 1}
           max={max}
-          value={value.end}
+          value={values.end}
           step={1}
           onChange={(e) => handleEndInputChange(e.currentTarget.valueAsNumber)}
           aria-label="end-range-input"

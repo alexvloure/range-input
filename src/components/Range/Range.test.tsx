@@ -45,7 +45,7 @@ describe('Range component', () => {
     const endValueHandle = getByTestId('endValueHandle');
 
     fireEvent.mouseDown(startValueHandle);
-    fireEvent.mouseMove(window, { clientX: 50 });
+    fireEvent.mouseMove(window.document, { clientX: 50 });
     fireEvent.mouseUp(startValueHandle);
 
     expect(onChangeMock).toHaveBeenCalledWith({
@@ -54,7 +54,7 @@ describe('Range component', () => {
     });
 
     fireEvent.mouseDown(endValueHandle);
-    fireEvent.mouseMove(window, { clientX: 90 });
+    fireEvent.mouseMove(window.document, { clientX: 90 });
     fireEvent.mouseUp(endValueHandle);
 
     expect(onChangeMock).toHaveBeenCalledWith({
@@ -102,13 +102,13 @@ describe('Range component', () => {
     const endValueHandle = getByTestId('endValueHandle');
 
     fireEvent.mouseDown(startValueHandle);
-    fireEvent.mouseMove(window, { clientX: 50 });
+    fireEvent.mouseMove(window.document, { clientX: 50 });
     fireEvent.mouseUp(startValueHandle);
 
     expect(onChangeMock).toHaveBeenCalledWith({ start: 40, end: 80 });
 
     fireEvent.mouseDown(endValueHandle);
-    fireEvent.mouseMove(window, { clientX: 160 });
+    fireEvent.mouseMove(window.document, { clientX: 160 });
     fireEvent.mouseUp(endValueHandle);
 
     expect(onChangeMock).toHaveBeenCalledWith({ start: 40, end: 60 });

@@ -8,14 +8,18 @@ describe('RangeLabels component', () => {
     min: 0,
     max: 100,
     stepMode: false,
-    value: { start: 20, end: 80 } as RangeValueType,
+    values: { start: 20, end: 80 } as RangeValueType,
     changeValue: jest.fn(),
   };
 
   it('renders with default props', () => {
     const props = { ...defaultProps };
 
-    const { getByLabelText } = render(<RangeLabels {...props} />);
+    const { getByLabelText } = render(
+      <RangeLabels {...props}>
+        <></>
+      </RangeLabels>
+    );
 
     expect(getByLabelText('start-range-input')).toBeInTheDocument();
     expect(getByLabelText('end-range-input')).toBeInTheDocument();
@@ -24,7 +28,11 @@ describe('RangeLabels component', () => {
   it('renders input fields with correct attributes and values', () => {
     const props = { ...defaultProps };
 
-    const { getByLabelText } = render(<RangeLabels {...props} />);
+    const { getByLabelText } = render(
+      <RangeLabels {...props}>
+        <></>
+      </RangeLabels>
+    );
     const startInput = getByLabelText('start-range-input') as HTMLInputElement;
     const endInput = getByLabelText('end-range-input') as HTMLInputElement;
 
@@ -38,7 +46,11 @@ describe('RangeLabels component', () => {
 
   it('calls changeValue with correct parameters when input values change', () => {
     const props = { ...defaultProps };
-    const { getByLabelText } = render(<RangeLabels {...props} />);
+    const { getByLabelText } = render(
+      <RangeLabels {...props}>
+        <></>
+      </RangeLabels>
+    );
     const startInput = getByLabelText('start-range-input') as HTMLInputElement;
     const endInput = getByLabelText('end-range-input') as HTMLInputElement;
 
